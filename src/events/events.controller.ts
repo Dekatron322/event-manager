@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   Logger,
+  NotFoundException,
   Param,
   ParseIntPipe,
   Patch,
@@ -54,7 +55,12 @@ export class EventsController {
 
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
-    return await this.repository.findOne({ where: { id } });
+    const event = await this.repository.findOne({ where: { id } });
+
+    if (!event) {
+      throw new NotFoundException();
+    }
+    return event;
   }
 
   // You can also use the @UsePipes decorator to enable pipes.
@@ -74,6 +80,10 @@ export class EventsController {
   async update(@Param('id') id, @Body() input: UpdateEventDto) {
     const event = await this.repository.findOne(id);
 
+    if (!event) {
+      throw new NotFoundException();
+    }
+
     return await this.repository.save({
       ...event,
       ...input,
@@ -85,6 +95,9 @@ export class EventsController {
   @HttpCode(204)
   async remove(@Param('id') id) {
     const event = await this.repository.findOne(id);
+    if (!event) {
+      throw new NotFoundException();
+    }
     await this.repository.remove(event);
   }
 }
